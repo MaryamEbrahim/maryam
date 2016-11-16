@@ -1,0 +1,108 @@
+#Install MongoDB
+mongo:
+  image: mongo:3.2
+  ports:
+  - "27017:27017"
+  volumes:
+  - /var/lib/mongodb:/var/lib/mongodb
+  restart: always
+  autodestroy: no
+  
+#Install Redis
+redis:
+  image: redis:3.0
+  ports:
+  - "6379:6379"
+  - "16379:16379"
+  - "26379:26379"
+  restart: always
+  autodestroy: no
+
+#Install CloudBoost API
+api: 
+  image: cloudboost/cloudboost:latest
+  ports:
+  - "4730:4730"
+  expose:
+  - "4730"
+  links:
+  - "mongo"
+  - "redis"
+  restart: always
+  tty: true
+  autoredeploy: true
+  deployment_strategy: high_availability
+  target_num_containers: 1
+  autodestroy: no
+  roles:
+  - global
+  sequential_deployment: true
+  hostname: api
+  
+#Install CloudBoost User Service
+service: 
+  image: cloudboost/user-service:latest
+  ports:
+  - "3000:3000"
+  expose:
+  - "3000"
+  links:
+  - "api"
+  - "mongo"
+  - "redis"
+  restart: always
+  tty: true
+  autoredeploy: true
+  deployment_strategy: high_availability
+  target_num_containers: 1
+  autodestroy: no
+  roles:
+  - global
+  sequential_deployment: true
+  hostname: service
+
+#Install CloudBoost Dashboard
+dashboard: 
+  image: cloudboost/dashboard:latest
+  ports:
+  - "80:1440"
+  - "1440:1440"
+  expose:
+  - "80"
+  - "1440"
+  links:
+  - "api"
+  - "service"
+  restart: always
+  tty: true
+  autoredeploy: true
+  deployment_strategy: high_availability
+  target_num_containers: 1
+  autodestroy: no
+  roles:
+  - global
+  sequential_deployment: true
+  hostname: dashboard
+
+#Install CloudBoost Accounts
+accounts: 
+  image: cloudboost/accounts:latest
+  ports:
+  - "1447:1447"
+  expose:
+  - "1447"
+  links:
+  - "api"
+  - "service"
+  - "dashboard"
+  restart: always
+  tty: true
+  autoredeploy: true
+  deployment_strategy: high_availability
+  target_num_containers: 1
+  autodestroy: no
+  roles:
+  - global
+  sequential_deployment: true
+  hostname: accounts
+   
